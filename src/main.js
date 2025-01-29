@@ -49,112 +49,6 @@ OCA.DrawIO = {
         window.location.href = url;
     },
 
-    registerFileActions: function () 
-    {
-        function registerAction(ext, attr)
-        {
-            registerFileAction(new FileAction({
-                id: 'drawioOpen' + ext,
-                displayName() {
-                    t(OCA.DrawIO.AppName, 'Open in Draw.io')
-                },
-                enabled(nodes) {
-                    return nodes.length === 1 && attr.mime === nodes[0].mime && (nodes[0].permissions & OC.PERMISSION_READ) !== 0
-                },
-                iconSvgInline: () => attr.icon,
-                async exec(node, view) {
-                    OCA.DrawIO.OpenEditor(node.fileid, ext == 'dwb');
-                    return true;
-                },
-                default: DefaultType.HIDDEN
-            }));
-        }
-        
-        for (const ext in OCA.DrawIO.Mimes) 
-        {
-            registerAction(ext, OCA.DrawIO.Mimes[ext]);
-        }
-    },
-
-    CreateNewFile: async function (name, folder, ext, mime) 
-    {
-        var isWB = ext == 'dwb';
-        var dir = folder.path;
-        var url = generateUrl('apps/' + OCA.DrawIO.AppName + '/ajax/new');
-
-        try
-        {
-            var response = await axios.post(url, {
-                name: name,
-                dir: dir
-            });
-
-            if (response.status !== 200) 
-            {
-                console.log('Fetch error. Status Code: ' + response.status);
-                showError(t(OCA.DrawIO.AppName, 'Error: Creating a new file failed.'), { timeout: 2500 });
-                return;
-            }
-
-            const file = new File({
-				source: folder.source + '/' + name,
-				id: response.data.id,
-				mtime: new Date(),
-				mime: mime,
-				owner: getCurrentUser()?.uid || null,
-				permissions: Permission.ALL,
-				root: folder?.root || '/files/' + getCurrentUser()?.uid,
-			})
-
-			emit('files:node:created', file)
-            OCA.DrawIO.OpenEditor(response.data.id, isWB);
-        }
-        catch(err) 
-        {
-            showError(t(OCA.DrawIO.AppName, 'Error: Creating a new file failed.'), { timeout: 2500 });
-            console.log('Fetch Error: ', err);
-        };
-    },
-
-    registerNewFileMenuPlugin: () => {
-        function getUniqueName(name, ext, names) 
-        {
-            let newName;
-
-            do
-            {
-                newName = name + '-' + Math.round(Math.random() * 1000000) + '.' + ext;
-            }
-            while (names.includes(newName)) 
-            
-            return newName;
-        }
-
-        function addMenuEntry(ext, attr)
-        {
-            addNewFileMenuEntry({
-                id: 'drawIoDiagram_' + ext,
-                displayName: attr.newStr,
-                enabled() {
-                    // only attach to main file list, public view is not supported yet
-                    return getNavigation()?.active?.id === 'files'
-                },
-                iconClass: attr.css,
-                async handler(context, content)
-                {
-                    const contentNames = content.map((node) => node.basename);
-                    const fileName = getUniqueName(attr.newStr, ext, contentNames);
-                    OCA.DrawIO.CreateNewFile(fileName, context, ext, attr.mime);
-                }
-            });
-        }
-
-        for (const ext in OCA.DrawIO.Mimes) 
-        {
-            addMenuEntry(ext, OCA.DrawIO.Mimes[ext]);
-        }
-    },
-
     init: async function () 
     {
         if ($('#isPublic').val() === '1' && !$('#filestable').length) 
@@ -198,11 +92,6 @@ OCA.DrawIO = {
                 editButton.innerText = t(OCA.DrawIO.AppName, 'Edit in Draw.io');
                 $('#preview').append(editButton);
             }
-        }
-        else
-        {
-            OCA.DrawIO.registerNewFileMenuPlugin();
-            OCA.DrawIO.registerFileActions();
         }
     }
 };
