@@ -24,6 +24,8 @@ import {
 import { getCurrentUser } from '@nextcloud/auth'
 import { emit } from '@nextcloud/event-bus'
 
+import PreviewComponent from './viewer.js'
+
 // Some code is inspired by Mind Map app (https://github.com/ACTom/files_mindmap)
 
 OCA.DrawIO = {
@@ -204,6 +206,17 @@ OCA.DrawIO = {
         }
     }
 };
+
+if (typeof OCA.Viewer !== 'undefined') {
+    OCA.Viewer.registerHandler({
+        id: 'drawio',
+        mimes: Object.values(OCA.DrawIO.Mimes).map(x => x.mime),
+        component: PreviewComponent,
+        group: null,
+        theme: 'default',
+        canCompare: true,
+    });
+}
 
 $(function () 
 {
