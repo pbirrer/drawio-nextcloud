@@ -1,3 +1,5 @@
+import * as $ from 'jquery';
+
 const generateRandom = () =>
 	Math.random()
 		.toString(36)
@@ -18,10 +20,10 @@ export default {
         const padding = 15;
 
         this.$nextTick(() => {
-            const el = document.getElementById(
-                `drawoi-${rnd}`,
-            );
+            const el = document.getElementById(`drawoi-${rnd}`);
+            const proseMirror = $(el).closest('.ProseMirror');
             el.addEventListener('click', () => {
+                if (proseMirror?.attr('contenteditable') == "false") return;
                 this.openEditor();
             });
         });
