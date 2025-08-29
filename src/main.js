@@ -40,7 +40,7 @@ OCA.DrawIO = {
             'newStr': t('drawio', 'New draw.io Whiteboard') }
     },
 
-    OpenEditor: function (fileId, isWB)
+    OpenEditor: function (fileId, isWB, newTab = false)
     {
         var shareToken = getSharingToken();
         var url = generateUrl('/apps/' + OCA.DrawIO.AppName + '/edit?' + 
@@ -51,7 +51,11 @@ OCA.DrawIO = {
             fileId: fileId,
             shareToken: shareToken
         });
-        window.location.href = url;
+        if (newTab) {
+            window.open(url, '_blank');
+        } else {
+            window.location.href = url;
+        }
     },
 
     registerFileActions: function () 

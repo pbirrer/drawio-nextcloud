@@ -1,4 +1,5 @@
 import * as $ from 'jquery';
+import { onBeforeUnmount, onUnmounted } from 'vue';
 
 const generateRandom = () =>
 	Math.random()
@@ -19,23 +20,39 @@ export default {
         const imgUrl = `/index.php/core/preview?fileId=${this.fileid}&x=-1&y=-1&a=1&${rnd}`;
         const padding = 15;
 
+        const img = new Image();
+
+        let reloadCounter = 0;
+        const reloadTime = 5000;
+        const reload = () => {
+            const el = document.getElementById(`drawoi-${rnd}`);
+            if (!el) return;
+            reloadCounter++;
+            img.src = `${imgUrl}&t=${reloadCounter}`;
+            setTimeout(reload, reloadTime);
+        }
+
         this.$nextTick(() => {
             const el = document.getElementById(`drawoi-${rnd}`);
             const proseMirror = $(el).closest('.ProseMirror');
             el.addEventListener('click', () => {
                 if (proseMirror?.attr('contenteditable') == "false") return;
-                this.openEditor();
+                this.openEditor(true);
+                setTimeout(reload, reloadTime);
             });
         });
-        const img = new Image();
-        img.onload = function() {
+        img.onload = function(event) {
             const el = document.getElementById(
                 `drawoi-${rnd}`,
             );
+            if (!el) return;
+            el.replaceChildren();
+
+            const src = event.target.src;
             const img = document.createElement('div');
             img.style.height = `${this.height}px`;
             img.style.width = `100%`;
-            img.style.background = `url(${imgUrl}) no-repeat center/contain`;
+            img.style.background = `url(${src}) no-repeat center/contain`;
             img.style.cursor = 'pointer',
             img.style.margin = `${padding}px`,
 
@@ -73,8 +90,8 @@ export default {
         }
     },
     methods: {
-        openEditor() {
-            OCA.DrawIO.OpenEditor(this.fileid, this.isWB);
+        openEditor(newTab = false) {
+            OCA.DrawIO.OpenEditor(this.fileid, this.isWB, newTab);
         },
     },
 };
